@@ -1,0 +1,32 @@
+{
+  "name": "pet-store-api-testing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amakarenko1203/Pet-store-API-testing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amakarenko1203/Pet-store-API-testing/issues"
+  },
+  "homepage": "https://github.com/amakarenko1203/Pet-store-API-testing#readme",
+  "devDependencies": {
+    "@faker-js/faker": "^10.1.0",
+    "@playwright/test": "^1.56.0",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
+  }
+}
