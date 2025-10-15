@@ -1,22 +1,25 @@
 import {test, expect} from '@playwright/test';
-import { faker } from '@faker-js/faker';
+import { fa, faker } from '@faker-js/faker';
 import { z } from 'zod';
 import { UserSchema } from '../schemas/userSchema';
+import { create } from 'domain';
 
 
 test.describe('User API Tests', () => {
     const BASE_URL = `${process.env.BASE_URL}${process.env.API_VERSION}`;
+    let createUserRequestBody: any;
 
-    test('Create a new user', async ({ request }) => {
-        const createUserRequestBody = {
-            "id": 12312,
-            "username": "TestUserNameSalih123",
+    test.beforeEach(async ({ request }) => {
+        // Create a new user before each test and store the request body
+        createUserRequestBody = {
+            "id": faker.number.int({ min: 1, max: 100000 }),
+            "username": "TestUserName-delete-me",
             "firstName": faker.person.firstName(),
             "lastName": faker.person.lastName(),
             "email": faker.internet.email(),
-            "password": "Test1234!",
+            "password": faker.internet.password(),
             "phone": faker.phone.number(),
-            "userStatus": 0
+            "userStatus": faker.number.int({ min: 0, max: 10 })
         };
 
         const createUserResponse = await request.post(`${BASE_URL}/user`, {
@@ -34,11 +37,15 @@ test.describe('User API Tests', () => {
         });
         const actualResponseBody = await createUserResponse.json();
         expectedCreateUserResponseSchema.parse(actualResponseBody);
+    });
 
+    test('Create a new user', async () => {
+        // The user is already created in beforeEach, so just check the request body exists
+        expect(createUserRequestBody).toBeDefined();
     });
 
     test('Get user by username', async ({ request }) => {
-        const username = "TestUserNameSalih123";
+        const username = createUserRequestBody.username;
         const getUserResponse = await request.get(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
         expect(getUserResponse.status()).toBe(200);
         
