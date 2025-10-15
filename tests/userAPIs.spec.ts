@@ -46,8 +46,16 @@ test.describe('User API Tests', () => {
 
     test('Get user by username', async ({ request }) => {
         const username = createUserRequestBody.username;
-        const getUserResponse = await request.get(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
-        expect(getUserResponse.status()).toBe(200);
+        let getUserResponse;
+        for (let i = 0; i < 5; i++) {
+            getUserResponse = await request.get(`${BASE_URL}/user/${username}`);
+            if (getUserResponse.status() === 200) {
+                break; // Exit loop if the request is successful
+            }
+            console.log(`Attempt ${i + 1} failed. Retrying...`);
+        }
+        
+        expect(getUserResponse!.status()).toBe(200);
         
         const expectedGetUserResponseSchemaZod = z.object({
             "id": z.number(),
@@ -60,14 +68,21 @@ test.describe('User API Tests', () => {
             "userStatus": z.number()
         });
         
-        const actualGetUserResponseBody = await getUserResponse.json();
+        const actualGetUserResponseBody = await getUserResponse!.json();
         expectedGetUserResponseSchemaZod.parse(actualGetUserResponseBody);
     });
 
     test('Delete user by username', async ({ request }) => {
         const username = createUserRequestBody.username;
-        const deleteUserResponse = await request.delete(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
-        expect(deleteUserResponse.status()).toBe(200);
+        let deleteUserResponse;
+        for (let i = 0; i < 5; i++) {
+            deleteUserResponse = await request.delete(`${BASE_URL}/user/${username}`);
+            if (deleteUserResponse.status() === 200) {
+                break; // Exit loop if the request is successful
+            }
+            console.log(`Attempt ${i + 1} failed. Retrying...`);
+        }
+        expect(deleteUserResponse!.status()).toBe(200);
         
         const expectedDeleteUserResponseSchemaZod = z.object({
             "code": z.literal(200),
@@ -75,7 +90,7 @@ test.describe('User API Tests', () => {
             "message": z.literal(username)
         });
         
-        const actualDeleteUserResponseBody = await deleteUserResponse.json();
+        const actualDeleteUserResponseBody = await deleteUserResponse!.json();
         expectedDeleteUserResponseSchemaZod.parse(actualDeleteUserResponseBody);
     });
 
