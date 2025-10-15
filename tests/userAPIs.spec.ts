@@ -64,4 +64,19 @@ test.describe('User API Tests', () => {
         expectedGetUserResponseSchemaZod.parse(actualGetUserResponseBody);
     });
 
+    test('Delete user by username', async ({ request }) => {
+        const username = createUserRequestBody.username;
+        const deleteUserResponse = await request.delete(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
+        expect(deleteUserResponse.status()).toBe(200);
+        
+        const expectedDeleteUserResponseSchemaZod = z.object({
+            "code": z.literal(200),
+            "type": z.literal("unknown"),
+            "message": z.literal(username)
+        });
+        
+        const actualDeleteUserResponseBody = await deleteUserResponse.json();
+        expectedDeleteUserResponseSchemaZod.parse(actualDeleteUserResponseBody);
+    });
+
 });
