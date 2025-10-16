@@ -2,7 +2,7 @@ import {test, expect} from '@playwright/test';
 import { fa, faker } from '@faker-js/faker';
 import { z } from 'zod';
 import { UserSchema } from '../schemas/userSchema';
-import { create } from 'domain';
+import {getAPI, postAPI } from '../utils/apiCallHelper';
 
 
 test.describe('User API Tests', () => {
@@ -39,29 +39,63 @@ test.describe('User API Tests', () => {
         expectedCreateUserResponseSchema.parse(actualResponseBody);
     });
 
-    test('Create a new user', async () => {
-        // The user is already created in beforeEach, so just check the request body exists
-        expect(createUserRequestBody).toBeDefined();
+    test('Create a new user', async ({ request }) => {
+        const expectedCreateUserResponseSchema = z.object({
+            code: z.literal(200),
+            type: z.literal("unknown"),
+            message: z.literal(createUserRequestBody.id.toString()),
+        });
+
+        const response = await postAPI(
+            request,
+            `${BASE_URL}/user`,
+            createUserRequestBody,
+            200,
+            expectedCreateUserResponseSchema
+        );
     });
 
-    test('Get user by username', async ({ request }) => {
+    test('Get user details', async ({ request }) => {
         const username = createUserRequestBody.username;
-        const getUserResponse = await request.get(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
-        expect(getUserResponse.status()).toBe(200);
+        const expectedGetUserResponseSchema = z.object({
+            id: z.number(),
+            username: z.string(),
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            password: z.string(),
+            phone: z.string(),
+            userStatus: z.number(),
+        });
+
+        await getAPI(
+            request,
+            `${BASE_URL}/user/${username}`,
+            200,
+            expectedGetUserResponseSchema
+        );
+    });
+
+    test('Delete user by username', async ({ request }) => {
+        const username = createUserRequestBody.username;
+        let deleteUserResponse;
+        for (let i = 0; i < 5; i++) {
+            deleteUserResponse = await request.delete(`${BASE_URL}/user/${username}`);
+            if (deleteUserResponse.status() === 200) {
+                break; // Exit loop if the request is successful
+            }
+            console.log(`Attempt ${i + 1} failed. Retrying...`);
+        }
+        expect(deleteUserResponse!.status()).toBe(200);
         
-        const expectedGetUserResponseSchemaZod = z.object({
-            "id": z.number(),
-            "username": z.literal(username),
-            "firstName": z.string(),
-            "lastName": z.string(),
-            "email": z.string(),
-            "password": z.string(),
-            "phone": z.string(),
-            "userStatus": z.number()
+        const expectedDeleteUserResponseSchemaZod = z.object({
+            "code": z.literal(200),
+            "type": z.literal("unknown"),
+            "message": z.literal(username)
         });
         
-        const actualGetUserResponseBody = await getUserResponse.json();
-        expectedGetUserResponseSchemaZod.parse(actualGetUserResponseBody);
+        const actualDeleteUserResponseBody = await deleteUserResponse!.json();
+        expectedDeleteUserResponseSchemaZod.parse(actualDeleteUserResponseBody);
     });
 
 });
