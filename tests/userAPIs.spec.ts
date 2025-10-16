@@ -2,7 +2,7 @@ import {test, expect} from '@playwright/test';
 import { fa, faker } from '@faker-js/faker';
 import { z } from 'zod';
 import { UserSchema } from '../schemas/userSchema';
-import { create } from 'domain';
+import { getAPI, postAPI, deleteAPI } from '../utils/apiCallHelper';
 
 
 test.describe('User API Tests', () => {
@@ -22,46 +22,72 @@ test.describe('User API Tests', () => {
             "userStatus": faker.number.int({ min: 0, max: 10 })
         };
 
-        const createUserResponse = await request.post(`${BASE_URL}/user`, {
-            data: createUserRequestBody,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        expect(createUserResponse.status()).toBe(200);
-
-        const expectedCreateUserResponseSchema  = z.object({
+        const expectedCreateUserResponseSchema = z.object({
             code: z.literal(200),
             type: z.literal("unknown"),
             message: z.literal(createUserRequestBody.id.toString())
         });
-        const actualResponseBody = await createUserResponse.json();
-        expectedCreateUserResponseSchema.parse(actualResponseBody);
+
+        await postAPI(
+            request,
+            `${BASE_URL}/user`,
+            createUserRequestBody,
+            200,
+            expectedCreateUserResponseSchema
+        );
     });
 
-    test('Create a new user', async () => {
-        // The user is already created in beforeEach, so just check the request body exists
-        expect(createUserRequestBody).toBeDefined();
+    test('Create a new user', async ({ request }) => {
+        const expectedCreateUserResponseSchema = z.object({
+            code: z.literal(200),
+            type: z.literal("unknown"),
+            message: z.literal(createUserRequestBody.id.toString())
+        });
+
+        await postAPI(
+            request,
+            `${BASE_URL}/user`,
+            createUserRequestBody,
+            200,
+            expectedCreateUserResponseSchema
+        );
     });
 
     test('Get user by username', async ({ request }) => {
         const username = createUserRequestBody.username;
-        const getUserResponse = await request.get(`${process.env.BASE_URL}${process.env.API_VERSION}/user/${username}`);
-        expect(getUserResponse.status()).toBe(200);
-        
-        const expectedGetUserResponseSchemaZod = z.object({
-            "id": z.number(),
-            "username": z.literal(username),
-            "firstName": z.string(),
-            "lastName": z.string(),
-            "email": z.string(),
-            "password": z.string(),
-            "phone": z.string(),
-            "userStatus": z.number()
+        const expectedGetUserResponseSchema = z.object({
+            id: z.number(),
+            username: z.string(),
+            firstName: z.string(),
+            lastName: z.string(),
+            email: z.string().email(),
+            password: z.string(),
+            phone: z.string(),
+            userStatus: z.number()
         });
         
-        const actualGetUserResponseBody = await getUserResponse.json();
-        expectedGetUserResponseSchemaZod.parse(actualGetUserResponseBody);
+        await getAPI(
+            request,
+            `${BASE_URL}/user/${username}`,
+            200,
+            expectedGetUserResponseSchema
+        );
+    });
+
+    test('Delete user by username', async ({ request }) => {
+        const username = createUserRequestBody.username;
+        const expectedDeleteUserResponseSchema = z.object({
+            code: z.literal(200),
+            type: z.literal("unknown"),
+            message: z.literal(username)
+        });
+        
+        await deleteAPI(
+            request,
+            `${BASE_URL}/user/${username}`,
+            200,
+            expectedDeleteUserResponseSchema
+        );
     });
 
 });
