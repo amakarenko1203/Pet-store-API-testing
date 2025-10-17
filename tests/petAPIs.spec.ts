@@ -49,6 +49,18 @@ test.describe('Pet API Tests', () => {
 
         console.log(`Successfully added new pet with ID: ${createPetRequestBody.id} and name: ${createPetRequestBody.name}`);
     });
-    
+    // Get pet by id
+    test('Get pet by ID', async ({ request }) => {
+        const petId = 4521;
+        const response = await getAPI(
+            request,
+            `${BASE_URL}/pet/${petId}`,
+            200,
+            PetSchema
+        );
+
+        const petData = await response.json();
+
+    });
 
 });
