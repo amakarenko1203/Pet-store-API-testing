@@ -1,5 +1,7 @@
 import { APIRequestContext, APIResponse } from '@playwright/test';
-import { ZodTypeAny } from 'zod';
+import { z } from 'zod';
+
+type ZodSchema = z.ZodSchema;
 
 
 /**
@@ -15,7 +17,7 @@ export async function getAPI(
     request: APIRequestContext,
     url: string,
     expectedStatusCode: number,
-    expectedSchema: ZodTypeAny,
+    expectedSchema: ZodSchema,
     retryCount: number = 5, // default retry count is 5, if not provided, OPTIONAL parameter
 ): Promise<APIResponse> {
 
@@ -52,7 +54,7 @@ export async function postAPI(
     url: string,
     requestBody: any,
     expectedStatusCode: number,
-    expectedSchema: ZodTypeAny,
+    expectedSchema: ZodSchema,
     retryCount: number = 5, // default retry count is 5, if not provided, OPTIONAL parameter
 ): Promise<APIResponse> {
 
@@ -89,7 +91,7 @@ export async function putAPI(
     url: string,
     requestBody: any,
     expectedStatusCode: number,
-    expectedSchema: ZodTypeAny,
+    expectedSchema: ZodSchema,
     retryCount: number = 5, // default retry count is 5, if not provided, OPTIONAL parameter
 ): Promise<APIResponse> {   
     // retry logic because API is not working properly, it will retry 5 times before failing the test
@@ -123,7 +125,7 @@ export async function deleteAPI(
     request: APIRequestContext,
     url: string,
     expectedStatusCode: number,
-    expectedSchema: ZodTypeAny,
+    expectedSchema: ZodSchema,
     retryCount: number = 5, // default retry count is 5, if not provided, OPTIONAL parameter
 ): Promise<APIResponse> {
 
