@@ -1,6 +1,7 @@
 import {test, expect} from '@playwright/test';
 import { z } from 'zod';
-import { postAPI } from '../utils/apiCallHelper';
+import { postAPI, getAPI } from '../utils/apiCallHelper';
+import { PetSchema } from '../schemas/petSchema';
 
 test.describe('Pet API Tests', () => {
     const BASE_URL = `${process.env.BASE_URL}${process.env.API_VERSION}`;
@@ -48,5 +49,6 @@ test.describe('Pet API Tests', () => {
 
         console.log(`Successfully added new pet with ID: ${createPetRequestBody.id} and name: ${createPetRequestBody.name}`);
     });
+    
 
 });
