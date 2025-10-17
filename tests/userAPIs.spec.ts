@@ -1,5 +1,5 @@
 import {test, expect} from '@playwright/test';
-import { fa, faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { z } from 'zod';
 import { UserSchema } from '../schemas/userSchema';
 import { getAPI, postAPI, putAPI, deleteAPI } from '../utils/apiCallHelper';
