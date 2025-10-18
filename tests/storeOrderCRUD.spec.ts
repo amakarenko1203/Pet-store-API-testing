@@ -1,4 +1,5 @@
 import {test, expect} from '@playwright/test';
+import { faker } from '@faker-js/faker';
 import { z } from 'zod';
 import { getAPI, postAPI, deleteAPI } from '../utils/apiCallHelper';
 
@@ -8,12 +9,12 @@ test.describe('Store Order API Tests', () => {
     test('End-to-end test flow for Store Order APIs - Create, Get, Delete', async ({ request }) => {
        
         const createOrderRequestBody = {
-            "id": 1380,
-            "petId": 0,
-            "quantity": 2,
-            "shipDate": "2025-10-09T02:11:39.913+0000",
-            "status": "delivered",
-            "complete": true
+            "id": faker.number.int({ min: 1, max: 999999 }),
+            "petId": faker.number.int({ min: 1, max: 100 }),
+            "quantity": faker.number.int({ min: 1, max: 10 }),
+            "shipDate": faker.date.future().toISOString(),
+            "status": faker.helpers.arrayElement(["placed", "approved", "delivered"]),
+            "complete": faker.datatype.boolean()
         };
 
         const expectedCreateOrderResponseSchema = z.object({
