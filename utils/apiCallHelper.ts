@@ -1,5 +1,6 @@
 import { APIRequestContext, APIResponse } from '@playwright/test';
 import { z } from 'zod';
+import { faker } from '@faker-js/faker';
 
 type ZodSchema = z.ZodSchema;
 
@@ -145,4 +146,34 @@ export async function deleteAPI(
 
     // if all retries was unsuccessful, throw an error
     throw new Error('Max retries reached. API call failed.');
+}
+
+/**
+ * Creates an array of random user JSON objects for testing
+ * @param amountOfUsers -> number of users to generate
+ * @returns -> array of user objects with random data for edge case coverage
+ */
+export function createRandomUsersRequestBody(amountOfUsers: number) {
+    const users = [];
+    
+    for (let i = 1; i <= amountOfUsers; i++) {
+        const user = {
+            "id": faker.number.int({ min: 1, max: 999999 }),
+            "username": `User${i}-${faker.internet.username()}-${faker.string.alphanumeric(faker.number.int({ min: 3, max: 8 }))}`,
+            "firstName": faker.person.firstName(),
+            "lastName": faker.person.lastName(),
+            "email": faker.internet.email(),
+            "password": faker.internet.password({ length: faker.number.int({ min: 8, max: 20 }) }),
+            "phone": faker.helpers.arrayElement([
+                faker.phone.number(),
+                "123-456-7890",
+                "(123) 456-7890", 
+                "+1-123-456-7890"
+            ]),
+            "userStatus": faker.number.int({ min: 0, max: 5 })
+        };
+        users.push(user);
+    }
+    
+    return users;
 }
