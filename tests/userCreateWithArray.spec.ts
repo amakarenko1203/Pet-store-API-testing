@@ -1,26 +1,12 @@
 import {test, expect} from '@playwright/test';
-import { faker } from '@faker-js/faker';
 import { z } from 'zod';
-import { postAPI } from '../utils/apiCallHelper';
+import { postAPI, createRandomUsersRequestBody } from '../utils/apiCallHelper';
 
 test.describe('User Create With Array Tests', () => {
     const BASE_URL = `${process.env.BASE_URL}${process.env.API_VERSION}`;
 
     test("Creates list of users with given input array", async ({ request }) => {
-        const createUsersRequestBody = [];
-
-        for (let i = 1; i <= 3; i++) {
-            createUsersRequestBody.push({
-                "id": faker.number.int({ min: 1, max: 100000 }),
-                "username": `User${i}-${faker.string.alphanumeric(6)}`,
-                "firstName": faker.person.firstName(),
-                "lastName": faker.person.lastName(),
-                "email": faker.internet.email(),
-                "password": faker.internet.password({ length: 10 }),
-                "phone": faker.phone.number(),
-                "userStatus": faker.number.int({ min: 0, max: 2 })
-            });
-        }
+        const createUsersRequestBody = createRandomUsersRequestBody(4);
 
         const responseCreateUsersWithArraySchemaZod = z.object({
             code: z.literal(200),
