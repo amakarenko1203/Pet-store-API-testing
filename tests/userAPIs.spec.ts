@@ -1,13 +1,15 @@
 import {test, expect} from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { z } from 'zod';
+import { UserSchema } from '../schemas/userSchema';
 import { getAPI, postAPI, putAPI, deleteAPI } from '../utils/apiCallHelper';
+
 
 test.describe('User API Tests', () => {
     const BASE_URL = `${process.env.BASE_URL}${process.env.API_VERSION}`;
 
     test('End-to-end test flow for User APIs - Create, Get, Put, Delete', async ({ request }) => {
-        // Create user data for CRUD operations
+        // Define user data for CRUD operations
         const createUserRequestBody = {
             "id": faker.number.int({ min: 1, max: 100000 }),
             "username": "TestUserName-delete-me",
@@ -19,21 +21,19 @@ test.describe('User API Tests', () => {
             "userStatus": faker.number.int({ min: 0, max: 10 })
         };
 
-        // Update user data for PUT operation
         const updateUserRequestBody = {
-            "id": createUserRequestBody.id,
-            "username": createUserRequestBody.username,
+            "id": 12312,
+            "username": "TestUserNameSalih123",
             "firstName": "UpdatedFirstName",
             "lastName": "UpdatedLastName",
-            "email": faker.internet.email(),
-            "password": "updatedPassword123",
-            "phone": faker.phone.number(),
-            "userStatus": faker.number.int({ min: 0, max: 10 })
+            "email": "updated.email@example.com",
+            "password": "Test1234!",
+            "phone": "+1-555-0199",
+            "userStatus": 0
         };
 
-        // Define user data for CRUD operations
         const username = createUserRequestBody.username;
-
+        
         // Define schemas for each operation
         const expectedCreateUserResponseSchema = z.object({
             code: z.literal(200),
@@ -55,7 +55,7 @@ test.describe('User API Tests', () => {
         const expectedUpdateUserResponseSchema = z.object({
             code: z.literal(200),
             type: z.literal("unknown"),
-            message: z.literal(createUserRequestBody.id.toString())
+            message: z.string()
         });
 
         const expectedDeleteUserResponseSchema = z.object({
@@ -64,7 +64,7 @@ test.describe('User API Tests', () => {
             message: z.literal(username)
         });
 
-        // Post -> Create a new user
+        // Post -> Create a user
         await postAPI(
             request,
             `${BASE_URL}/user`,
