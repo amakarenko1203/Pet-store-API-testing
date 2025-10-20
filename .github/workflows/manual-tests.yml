@@ -1,0 +1,210 @@
+name: Manual Test Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - development
+      test_suite:
+        description: 'Test Suite to Run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - user
+          - pet
+          - store
+          - smoke
+          - critical
+          - custom
+      custom_pattern:
+        description: 'Custom Test Pattern (if "custom" selected)'
+        required: false
+        default: ''
+        type: string
+      workers:
+        description: 'Number of Workers'
+        required: false
+        default: '3'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+      retries:
+        description: 'Number of Retries'
+        required: false
+        default: '2'
+        type: choice
+        options:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+      reporter:
+        description: 'Test Reporter'
+        required: false
+        default: 'html'
+        type: choice
+        options:
+          - html
+          - json
+          - junit
+          - list
+          - dot
+      timeout:
+        description: 'Test Timeout (minutes)'
+        required: false
+        default: '30'
+        type: choice
+        options:
+          - '15'
+          - '30'
+          - '45'
+          - '60'
+
+jobs:
+  manual-tests:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    timeout-minutes: ${{ fromJSON(github.event.inputs.timeout) }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install
+          
+      - name: Create test results directory
+        run: mkdir -p test-results
+        
+      - name: Set Base URL
+        id: set-url
+        run: |
+          case "${{ github.event.inputs.environment }}" in
+            "production")
+              echo "BASE_URL=https://petstore.swagger.io/v2" >> $GITHUB_ENV
+              ;;
+            "staging")
+              echo "BASE_URL=https://petstore.swagger.io/v2" >> $GITHUB_ENV
+              ;;
+            "development")
+              echo "BASE_URL=https://petstore.swagger.io/v2" >> $GITHUB_ENV
+              ;;
+          esac
+          
+      - name: Run All Tests
+        if: ${{ github.event.inputs.test_suite == 'all' }}
+        run: |
+          npx playwright test \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run User Tests
+        if: ${{ github.event.inputs.test_suite == 'user' }}
+        run: |
+          npx playwright test tests/user* \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run Pet Tests
+        if: ${{ github.event.inputs.test_suite == 'pet' }}
+        run: |
+          npx playwright test tests/pet* \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run Store Tests
+        if: ${{ github.event.inputs.test_suite == 'store' }}
+        run: |
+          npx playwright test tests/store* \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run Smoke Tests
+        if: ${{ github.event.inputs.test_suite == 'smoke' }}
+        run: |
+          npx playwright test --grep "@smoke" \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run Critical Tests
+        if: ${{ github.event.inputs.test_suite == 'critical' }}
+        run: |
+          npx playwright test tests/userAPIs.spec.ts tests/petAPIs.spec.ts \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Run Custom Tests
+        if: ${{ github.event.inputs.test_suite == 'custom' && github.event.inputs.custom_pattern != '' }}
+        run: |
+          npx playwright test ${{ github.event.inputs.custom_pattern }} \
+            --workers=${{ github.event.inputs.workers }} \
+            --retries=${{ github.event.inputs.retries }} \
+            --reporter=${{ github.event.inputs.reporter }}
+            
+      - name: Generate Test Summary
+        if: always()
+        run: |
+          echo "## Manual Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Suite:** ${{ github.event.inputs.test_suite }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workers:** ${{ github.event.inputs.workers }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Retries:** ${{ github.event.inputs.retries }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reporter:** ${{ github.event.inputs.reporter }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timeout:** ${{ github.event.inputs.timeout }} minutes" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.custom_pattern }}" != "" ]; then
+            echo "- **Custom Pattern:** ${{ github.event.inputs.custom_pattern }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Execution Time:** $(date)" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: manual-test-results-${{ github.event.inputs.environment }}-${{ github.run_number }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+          
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        if: always() && github.event.inputs.reporter == 'html'
+        with:
+          name: manual-playwright-report-${{ github.event.inputs.environment }}-${{ github.run_number }}
+          path: playwright-report/
+          retention-days: 30
+          
+      - name: Upload JSON Report
+        uses: actions/upload-artifact@v4
+        if: always() && github.event.inputs.reporter == 'json'
+        with:
+          name: manual-json-report-${{ github.event.inputs.environment }}-${{ github.run_number }}
+          path: test-results/results.json
+          retention-days: 30
