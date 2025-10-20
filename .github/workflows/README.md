@@ -35,11 +35,11 @@ This directory contains GitHub Actions workflows for automated testing of the Pe
   - Extended artifact retention: 30 days (90 days for merged reports)
   - Critical failure notifications
 
-### 4. **CI - Pull Request Tests** (`ci-tests.yml`)
-- **Triggers**: Pull requests, pushes to main branch
+4. **CI - Pull Request Tests** (`ci-tests.yml`)
+- **Triggers**: Pull requests and pushes to main branch
 - **Purpose**: Continuous integration validation
 - **Features**:
-  - Multi-Node.js version testing (18, 20)
+  - Multi-Node.js version testing (20, 22)
   - Code linting and type checking
   - Security vulnerability scanning
   - Test result summaries
@@ -67,7 +67,7 @@ env:
 ```
 
 ### Node.js Setup
-- **Version**: Node.js 18 (with Node.js 20 support in CI)
+- **Version**: Node.js 22 (latest LTS) with Node.js 20 compatibility testing in CI
 - **Package Manager**: npm with caching enabled
 - **Playwright**: Auto-installation of browser dependencies
 
